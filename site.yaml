@@ -14,13 +14,6 @@
       name: nginx
       state: started
 
-
-- hosts: haproxy
-  tasks:
-    - name: install haproxy
-      apt: name=haproxy state=present
-
-
 - hosts: webservers
   tasks:
     - name: Install PHP
@@ -36,3 +29,23 @@
       apt:
         name: php-fpm
         state: latest
+
+- hosts: webservers
+  tasks:
+  - name: Create php file
+    file:
+      path: "/var/www/html/index.php"
+      state: touch
+      content: <?php echo date("Y-m-d H:i:s") . " Welcome to " . gethostname() . "|" .$_SERVER['SERVER_ADDR'] .":" . $_SERVER['SERVER_PORT'] ."<br>\n"; ?> 
+
+- hosts: webservers
+  tasks:
+  - name: delete old nginx config file
+    file:
+      path: /etc/nginx/sites-available/default.conf
+      state: absent
+
+- hosts: haproxy
+  tasks:
+    - name: install haproxy
+      apt: name=haproxy state=present
