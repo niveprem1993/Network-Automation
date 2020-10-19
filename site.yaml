@@ -9,18 +9,18 @@
      name: nginx
      state: latest
 
+  
+  - name: Stop Apache2 service
+    service:
+      name: apache2
+      state: stopped
+      enabled: no
+
   - name: start nginx
     service:
       name: nginx
       state: started
-
-
-- hosts: haproxy
-  tasks:
-    - name: install haproxy
-      apt: name=haproxy state=present
-
-
+       
 - hosts: webservers
   tasks:
     - name: Install PHP
@@ -36,3 +36,97 @@
       apt:
         name: php-fpm
         state: latest
+
+
+- hosts: webservers
+  tasks:
+  - name: create new default for nginx
+    become: true
+    copy:
+      dest: "/etc/nginx/sites-available/default"
+      content: | 
+          server{
+                 listen 80 default_server;
+                 listen [::]:80 default_server;
+
+                 root /var/www/html;
+
+                 index index.php index.html index.htm index.nginx-debian.html;
+
+                 server_name _;
+
+                 location / {
+
+                          try_files $uri $uri/ =404;
+                 }
+
+
+
+                 location ~ \.php$ {
+                         include snippets/fastcgi-php.conf;
+
+                         fastcgi_pass unix:/var/run/php/php7.4-fpm.sock;
+
+
+                 }
+
+
+          }
+
+- hosts: webservers
+  tasks:
+  - name: create index.php file in required path
+    become: true
+    copy:
+      dest: "/var/www/html/index.php"
+      content: |
+        <?php echo date("Y-m-d H:i:s") . " Welcome to " . gethostname() . "|" .$_SERVER['SERVER_ADDR'] .":" . $_SERVER['SERVER_PORT'] ."<br>\n"; ?>
+
+
+  - name: Restart nginx
+    become: true
+    service:
+      name=nginx
+      state=restarted
+      
+
+- hosts: haproxy
+  become: true
+  tasks:
+  - name: Install haproxy service
+    apt:
+     name: haproxy
+     state: latest
+     update_cache: yes
+
+  - name: Update haproxy config file
+    blockinfile:
+     path: /etc/haproxy/haproxy.cfg
+     block: |
+        frontend http-in
+        bind devhaproxy: 80
+        default_backend    backend_servers
+        option             forwardfor
+
+        backend backend_servers
+        balance            roundrobin
+        server devA :80 check
+        server devB :80 check
+        server devC :80 check
+
+
+  - name: approach haproxy server
+    command: curl -k 45.114.123.158
+    become: yes
+    register: attempt1
+
+
+  - name: approach haproxy server
+    command: curl -k 45.114.123.158
+    become: yes
+    register: attempt2
+
+  - name: approach haproxy server
+    command: curl -k 45.114.123.158
+    become: yes
+    register: attempt3
