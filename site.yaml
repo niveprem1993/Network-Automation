@@ -9,13 +9,6 @@
      name: nginx
      state: latest
 
-  
-  - name: Stop Apache2 service
-    service:
-      name: apache2
-      state: stopped
-      enabled: no
-
   - name: start nginx
     service:
       name: nginx
@@ -96,37 +89,28 @@
   - name: Install haproxy service
     apt:
      name: haproxy
-     state: latest
+     state: latest     
      update_cache: yes
 
   - name: Update haproxy config file
     blockinfile:
      path: /etc/haproxy/haproxy.cfg
      block: |
-        frontend http-in
-        bind devhaproxy: 80
-        default_backend    backend_servers
-        option             forwardfor
+        frontend bastionET2598
+            bind *:80
+            mode http
+            default_backend webservers
 
-        backend backend_servers
-        balance            roundrobin
-        server devA :80 check
-        server devB :80 check
-        server devC :80 check
+        backend webservers
+            balance roundrobin
+            option forwardfor
+            http-request set-header X-Forwarded-Port %[dst_port]
+            http-request add-header X-Forwarded-Proto https if { ssl_fc }
+            option httpchk HEAD / HTTP/1.1\r\nHost:localhost
+            server devA *:8080 check
+            server devB *:8080 check
+            server devC *:8080 check
 
-
-  - name: approach haproxy server
-    command: curl -k 45.114.123.158
-    become: yes
-    register: attempt1
-
-
-  - name: approach haproxy server
-    command: curl -k 45.114.123.158
-    become: yes
-    register: attempt2
-
-  - name: approach haproxy server
-    command: curl -k 45.114.123.158
-    become: yes
-    register: attempt3
+  handlers:
+  - name: restart haproxy
+    service: name=haproxy state=restarted enabled=yes
