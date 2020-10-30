@@ -13,39 +13,97 @@
     service:
       name: nginx
       state: started
+       
 
-- hosts: webservers
-  tasks:
-    - name: Install PHP
-      become: true
-      apt:
-        name: php
-        state: latest
+  - name: Install PHP
+    become: true
+    apt:
+      name: php
+      state: latest
 
-- hosts: webservers
-  tasks:
-    - name: Install PHP-FPM
-      become: true
-      apt:
-        name: php-fpm
-        state: latest
+  - name: Install PHP-FPM
+    become: true
+    apt:
+      name: php-fpm
+      state: latest
 
-- hosts: webservers
-  tasks:
-  - name: Create php file
-    file:
-      path: "/var/www/html/index.php"
-      state: touch
-      content: <?php echo date("Y-m-d H:i:s") . " Welcome to " . gethostname() . "|" .$_SERVER['SERVER_ADDR'] .":" . $_SERVER['SERVER_PORT'] ."<br>\n"; ?> 
+  - name: create new default for nginx
+    become: true
+    copy:
+      dest: "/etc/nginx/sites-available/default"
+      content: | 
+          server{
+                 listen 80 default_server;
+                 listen [::]:80 default_server;
 
-- hosts: webservers
-  tasks:
-  - name: delete old nginx config file
-    file:
-      path: /etc/nginx/sites-available/default.conf
-      state: absent
+                 root /var/www/html;
+
+                 index index.php index.html index.htm index.nginx-debian.html;
+
+                 server_name _;
+
+                 location / {
+
+                          try_files $uri $uri/ =404;
+                 }
+
+
+
+                 location ~ \.php$ {
+                         include snippets/fastcgi-php.conf;
+
+                         fastcgi_pass unix:/var/run/php/php7.4-fpm.sock;
+
+
+                 }
+
+
+          }
+
+
+
+  - name: create index.php file in required path
+    become: true
+    copy:
+      dest: "/var/www/html/index.php"
+      content: |
+        <?php echo date("Y-m-d H:i:s") . " Welcome to " . gethostname() . "|" .$_SERVER['SERVER_ADDR'] .":" . $_SERVER['SERVER_PORT'] ."<br>\n"; ?>
+
+
+  - name: Restart nginx
+    become: true
+    service:
+      name=nginx
+      state=restarted
+      
 
 - hosts: haproxy
+  become: true
   tasks:
-    - name: install haproxy
-      apt: name=haproxy state=present
+  - name: Install haproxy service
+    apt:
+     name: haproxy
+     state: latest     
+     update_cache: yes
+
+  - name: Update haproxy config file
+    blockinfile:
+     path: /etc/haproxy/haproxy.cfg
+     block: |
+        frontend haproxy
+            bind 10.0.1.27:80
+            mode http
+            default_backend webservers
+
+        backend webservers
+            balance roundrobin
+            option forwardfor
+            http-request set-header X-Forwarded-Port %[dst_port]
+            http-request add-header X-Forwarded-Proto https if { ssl_fc }
+            option httpchk HEAD / HTTP/1.1\r\nHost:localhost
+            server devA 10.0.1.18:80
+            server devB 10.0.1.28:80
+            server devC 10.0.1.22:80
+                        
+  - name: restart haproxy
+    action: service name=haproxy state=restarted
