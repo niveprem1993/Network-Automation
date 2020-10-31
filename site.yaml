@@ -90,16 +90,13 @@
      path: /etc/haproxy/haproxy.cfg
      block: |
         frontend haproxy
-            bind 10.0.1.27:80
+            bind devhaproxy:80
             mode http
             default_backend webservers
 
         backend webservers
             balance roundrobin
             option forwardfor
-            http-request set-header X-Forwarded-Port %[dst_port]
-            http-request add-header X-Forwarded-Proto https if { ssl_fc }
-            option httpchk HEAD / HTTP/1.1\r\nHost:localhost
             server devA 10.0.1.18:80
             server devB 10.0.1.28:80
             server devC 10.0.1.22:80
