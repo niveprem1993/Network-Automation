@@ -66,7 +66,7 @@
     copy:
       dest: "/var/www/html/index.php"
       content: |
-        <?php echo date("Y-m-d H:i:s") . " Welcome to " . gethostname() . "|" .$_SERVER['SERVER_ADDR'] .":" . $_SERVER['SERVER_PORT'] ."<br>\n"; ?>
+        <?php echo date("Y-m-d H:i:s") . " * Hello Patrik * Welcome to " . gethostname() . "|" .$_SERVER['SERVER_ADDR'] .":" . $_SERVER['SERVER_PORT'] ."<br>\n"; ?>
 
 
   - name: Restart nginx
@@ -74,8 +74,11 @@
     service:
       name=nginx
       state=restarted
-      
 
+- hosts: webservers
+  tasks:
+    - debug: var=ansible_all_ipv4_addresses
+      
 - hosts: haproxy
   become: true
   tasks:
@@ -97,9 +100,9 @@
         backend webservers
             balance roundrobin
             option forwardfor
-            server devA 10.0.1.18:80
-            server devB 10.0.1.28:80
-            server devC 10.0.1.22:80
+        {%  for server in groups['webservers'] %}
+            server {{ hostvars[server]['inventory_hostname'] }} {{ hostvars[server]['ansible_default_ipv4']['address']}}:80 check
+        {% endfor %}
                         
   - name: restart haproxy
     action: service name=haproxy state=restarted
