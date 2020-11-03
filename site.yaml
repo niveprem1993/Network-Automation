@@ -93,7 +93,7 @@
      path: /etc/haproxy/haproxy.cfg
      block: |
         frontend haproxy
-            bind devhaproxy:80
+            bind *:80
             mode http
             default_backend webservers
 
