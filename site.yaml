@@ -106,3 +106,5 @@
                         
   - name: restart haproxy
     action: service name=haproxy state=restarted
+    
+#Final Edition
