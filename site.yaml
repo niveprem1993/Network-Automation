@@ -1,3 +1,5 @@
+#Final Edition - ansible-playbook writen by Mohammad Hossein Abdsharifi
+
 ---
 - name: nginx install & start services
   hosts: webservers
@@ -8,6 +10,11 @@
     yum:
      name: nginx
      state: latest
+     
+  - name: Remove apache2 service from servers
+    apt: 
+      name: apache2
+      state: absent
 
   - name: start nginx
     service:
@@ -107,4 +114,4 @@
   - name: restart haproxy
     action: service name=haproxy state=restarted
     
-#Final Edition
+
