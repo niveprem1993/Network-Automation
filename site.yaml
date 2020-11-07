@@ -4,8 +4,14 @@
 - name: nginx install & start services
   hosts: webservers
   become: true
-
+  
   tasks:
+  - name: update packages
+    become: true
+    apt: 
+      upgrade: dist
+      force_apt_get: yes
+      
   - name: install nginx
     yum:
      name: nginx
@@ -89,6 +95,12 @@
 - hosts: haproxy
   become: true
   tasks:
+  - name: update packages
+    become: true
+    apt: 
+      upgrade: dist
+      force_apt_get: yes
+      
   - name: Install haproxy service
     apt:
      name: haproxy
