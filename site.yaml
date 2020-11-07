@@ -1,7 +1,7 @@
 #Final Edition - ansible-playbook writen by Mohammad Hossein Abdsharifi
 
 ---
-- name: nginx install & start services
+- name: Tasks started for webservers
   hosts: webservers
   become: true
   
