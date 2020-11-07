@@ -6,6 +6,9 @@ devA
 devB 
 devC 
 
+[bastion] 
+bastionET2598
+
 [all:vars]
 ansible_user=ubuntu
 ansible_ssh_private_key_file=id_rsa
