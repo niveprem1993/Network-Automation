@@ -1,0 +1,33 @@
+
+HOST bastionET2598
+  Hostname 31.12.85.111
+  IdentityFile /home/ubuntu/.ssh/id_rsa
+  User ubuntu
+  Hostname bastionET2598
+  ControlPersist 2m
+  ControlPath ~/.ssh/ansible-%r@%h:%p
+
+HOST devA
+  Hostname 10.0.1.18
+  User ubuntu
+  IdentityFile /home/ubuntu/.ssh/id_rsa
+  ProxyCommand ssh bastionET2598 -W %h:%p
+  
+HOST devB
+  Hostname 10.0.1.28       
+  User ubuntu
+  IdentityFile /home/ubuntu/.ssh/id_rsa
+  ProxyCommand ssh bastionET2598 -W %h:%p
+
+HOST devC
+  Hostname 10.0.1.22
+  User ubuntu
+  IdentityFile /home/ubuntu/.ssh/id_rsa
+  ProxyCommand ssh bastionET2598 -W %h:%p
+
+HOST devhaproxy
+  Hostname 10.0.1.8
+  User ubuntu
+  IdentityFile /home/ubuntu/.ssh/id_rsa
+  ProxyCommand ssh bastionET2598 -W %h:%p
+
