@@ -4,41 +4,19 @@
 - name: Tasks started for webservers
   hosts: webservers
   become: true
-  
+
   tasks:
-  - name: update packages
-    become: true
-    apt: 
-      upgrade: dist
-      force_apt_get: yes
+  - name: Install nginx php-fpm and php
+    apt:
+      name: ['nginx', 'php-fpm', 'php']
+      state: latest
+      update_cache: yes
       
-  - name: install nginx
-    yum:
-     name: nginx
-     state: latest
-     
-  - name: Remove apache2 service from servers
-    apt: 
+  - name: Remove apache2 service from webservers
+    apt:
       name: apache2
       state: absent
-
-  - name: start nginx
-    service:
-      name: nginx
-      state: started
-       
-  - name: Install PHP
-    become: true
-    apt:
-      name: php
-      state: latest
-
-  - name: Install PHP-FPM
-    become: true
-    apt:
-      name: php-fpm
-      state: latest
-
+                    
   - name: create new default for nginx
     become: true
     copy:
@@ -47,40 +25,23 @@
           server{
                  listen 80 default_server;
                  listen [::]:80 default_server;
-
                  root /var/www/html;
-
                  index index.php index.html index.htm index.nginx-debian.html;
-
                  server_name _;
-
                  location / {
-
                           try_files $uri $uri/ =404;
                  }
-
-
-
                  location ~ \.php$ {
                          include snippets/fastcgi-php.conf;
-
                          fastcgi_pass unix:/var/run/php/php7.4-fpm.sock;
-
-
                  }
-
-
           }
-
-
-
   - name: create index.php file in required path
     become: true
     copy:
       dest: "/var/www/html/index.php"
       content: |
-        <?php echo date("Y-m-d H:i:s") . " * Hello Patrik * Welcome to " . gethostname() . "|" .$_SERVER['SERVER_ADDR'] .":" . $_SERVER['SERVER_PORT'] ."<br>\n"; ?>
-
+        <?php echo date("Y-m-d H:i:s") . " Welcome to " . gethostname() . "|" .$_SERVER['SERVER_ADDR'] .":" . $_SERVER['SERVER_PORT'] ."<br>\n"; ?>
 
   - name: Restart nginx
     become: true
@@ -95,12 +56,6 @@
 - hosts: haproxy
   become: true
   tasks:
-  - name: update packages
-    become: true
-    apt: 
-      upgrade: dist
-      force_apt_get: yes
-      
   - name: Install haproxy service
     apt:
      name: haproxy
@@ -115,7 +70,6 @@
             bind *:80
             mode http
             default_backend webservers
-
         backend webservers
             balance roundrobin
             option forwardfor
@@ -125,5 +79,3 @@
                         
   - name: restart haproxy
     action: service name=haproxy state=restarted
-    
-

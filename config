@@ -1,6 +1,6 @@
 
 HOST bastionET2598
-  Hostname 31.12.85.111
+  #Hostname 31.12.85.111
   IdentityFile /home/ubuntu/.ssh/id_rsa
   User ubuntu
   Hostname bastionET2598
