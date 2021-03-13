@@ -1,4 +1,3 @@
-#Final Edition - ansible-playbook writen by Mohammad Hossein Abdsharifi
 
 ---
 - name: Tasks started for webservers
