@@ -5,11 +5,30 @@
   become: true
 
   tasks:
-  - name: Install nginx php-fpm and php
+  - name: apt-get update
     apt:
-      name: ['nginx', 'php-fpm', 'php']
-      state: latest
       update_cache: yes
+      cache_valid_time: 3600
+      
+  - name: Install nginx
+    apt:
+      name: nginx
+      state: latest
+      
+  - name: start nginx
+    service:
+      name: nginx
+      state: started
+      
+  - name: Install php7.4
+    apt:
+      name: php7.4
+      state: latest
+      
+  - name: Install php7.4-fpm
+    apt:
+      name: php7.4-fpm
+      state: latest
       
   - name: Remove apache2 service from webservers
     apt:
@@ -45,8 +64,8 @@
   - name: Restart nginx
     become: true
     service:
-      name=nginx
-      state=restarted
+      name: nginx
+      state: restarted
 
 - hosts: webservers
   tasks:
@@ -77,4 +96,11 @@
         {% endfor %}
                         
   - name: restart haproxy
-    action: service name=haproxy state=restarted
+    service:
+      name: haproxy
+      state: restarted
+
+  - name: start haproxy
+    service:
+      name: haproxy
+      state: started
